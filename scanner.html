@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바코드 스캔</title>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root{--navy:#0b2d74;--green:#5f9e1b;--pass-bg:#eaf3de;--bg:#f6f7f5;--text:#182617;--text-dim:#5c6b58;--fail:#c8402f;--fail-bg:#faeae7;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:#000;}
+  body{font-family:'Inter',sans-serif;display:flex;flex-direction:column;min-height:100vh;}
+  header{background:var(--navy);color:#fff;padding:16px;font-weight:700;text-align:center;font-size:15px;}
+  #qrReader{flex:1;background:#000;}
+  #qrReader video{width:100%;}
+  .status-bar{background:var(--bg);color:var(--text-dim);text-align:center;padding:14px 16px;font-size:13px;line-height:1.5;}
+  .result-bar{background:var(--pass-bg);color:var(--green);text-align:center;padding:18px 16px;font-size:16px;font-weight:700;display:none;}
+  .error-bar{background:var(--fail-bg);color:var(--fail);text-align:center;padding:14px 16px;font-size:13px;display:none;}
+</style>
+</head>
+<body>
+<header>바코드를 화면 안에 맞춰주세요</header>
+<div id="qrReader"></div>
+<div class="status-bar" id="statusText">카메라를 준비하고 있어요...</div>
+<div class="result-bar" id="resultText"></div>
+<div class="error-bar" id="errorText"></div>
+
+<script>
+var html5QrCode = new Html5Qrcode('qrReader');
+var scanned = false;
+
+html5QrCode.start(
+  { facingMode: 'environment' },
+  { fps: 10, qrbox: { width: 260, height: 160 } },
+  function onScanSuccess(decodedText){
+    if(scanned) return;
+    scanned = true;
+
+    document.getElementById('statusText').style.display = 'none';
+    var resultEl = document.getElementById('resultText');
+    resultEl.textContent = '✓ 스캔 완료: ' + decodedText;
+    resultEl.style.display = 'block';
+
+    html5QrCode.stop().catch(function(){});
+
+    // 원래 창(유통기한관리 페이지)으로 스캔 결과 전달
+    if(window.opener){
+      window.opener.postMessage({ type: 'EXPIRY_BARCODE_SCANNED', barcode: decodedText }, '*');
+    }
+    setTimeout(function(){ window.close(); }, 600);
+  },
+  function onScanFailure(){ /* 인식 실패 프레임은 무시 (계속 스캔 시도) */ }
+).catch(function(err){
+  document.getElementById('statusText').style.display = 'none';
+  var errorEl = document.getElementById('errorText');
+  errorEl.textContent = '카메라를 시작하지 못했습니다: ' + err + ' (브라우저 카메라 권한을 확인해주세요)';
+  errorEl.style.display = 'block';
+});
+</script>
+</body>
+</html>
