@@ -33,11 +33,16 @@ var html5QrCode = new Html5Qrcode('qrReader');
 var scanned = false;
 
 html5QrCode.start(
-  { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+  { facingMode: 'environment' },
   {
     fps: 12,
     qrbox: { width: 300, height: 130 },
     aspectRatio: 1.777778,
+    videoConstraints: {
+      facingMode: 'environment',
+      width: { ideal: 1920 },
+      height: { ideal: 1080 }
+    },
     formatsToSupport: [
       Html5QrcodeSupportedFormats.EAN_13,
       Html5QrcodeSupportedFormats.EAN_8,
