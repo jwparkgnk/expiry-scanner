@@ -17,22 +17,39 @@
   .status-bar{background:var(--bg);color:var(--text-dim);text-align:center;padding:14px 16px;font-size:13px;line-height:1.5;}
   .result-bar{background:var(--pass-bg);color:var(--green);text-align:center;padding:18px 16px;font-size:16px;font-weight:700;display:none;}
   .error-bar{background:var(--fail-bg);color:var(--fail);text-align:center;padding:14px 16px;font-size:13px;display:none;}
+  .manual-link{display:block;text-align:center;background:var(--bg);color:var(--text-dim);text-decoration:underline;font-size:12.5px;padding:12px 16px;}
 </style>
 </head>
 <body>
-<header>바코드를 화면 안에 맞춰주세요</header>
+<header>바코드를 가로로 길게, 화면에 꽉 차게 맞춰주세요</header>
 <div id="qrReader"></div>
 <div class="status-bar" id="statusText">카메라를 준비하고 있어요...</div>
 <div class="result-bar" id="resultText"></div>
 <div class="error-bar" id="errorText"></div>
+<a href="#" id="manualLink" class="manual-link">바코드가 잘 안 읽히면 여기를 눌러 직접 입력하세요</a>
 
 <script>
 var html5QrCode = new Html5Qrcode('qrReader');
 var scanned = false;
 
 html5QrCode.start(
-  { facingMode: 'environment' },
-  { fps: 10, qrbox: { width: 260, height: 160 } },
+  { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+  {
+    fps: 12,
+    qrbox: { width: 300, height: 130 },
+    aspectRatio: 1.777778,
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.ITF,
+      Html5QrcodeSupportedFormats.QR_CODE
+    ],
+    experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+  },
   function onScanSuccess(decodedText){
     if(scanned) return;
     scanned = true;
@@ -56,6 +73,14 @@ html5QrCode.start(
   var errorEl = document.getElementById('errorText');
   errorEl.textContent = '카메라를 시작하지 못했습니다: ' + err + ' (브라우저 카메라 권한을 확인해주세요)';
   errorEl.style.display = 'block';
+});
+
+document.getElementById('manualLink').addEventListener('click', function(e){
+  e.preventDefault();
+  if(!scanned){
+    html5QrCode.stop().catch(function(){});
+  }
+  window.close();
 });
 </script>
 </body>
