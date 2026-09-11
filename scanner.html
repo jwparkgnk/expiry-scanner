@@ -55,20 +55,28 @@ html5QrCode.start(
     ],
     experimentalFeatures: { useBarCodeDetectorIfSupported: true }
   },
-  function onScanSuccess(decodedText){
+  function onScanSuccess(decodedText, decodedResult){
     if(scanned) return;
     scanned = true;
 
+    // UPC-A는 EAN-13과 같은 체계인데 앞자리 '0'이 생략된 12자리로 인식되는 경우가 있어,
+    // 제품DB에 저장된 형식과 맞도록 앞에 0을 복원해줍니다.
+    var formatName = (decodedResult && decodedResult.result && decodedResult.result.format && decodedResult.result.format.formatName) || '';
+    var finalText = decodedText;
+    if(formatName === 'UPC_A' && /^\d{12}$/.test(finalText)){
+      finalText = '0' + finalText;
+    }
+
     document.getElementById('statusText').style.display = 'none';
     var resultEl = document.getElementById('resultText');
-    resultEl.textContent = '✓ 스캔 완료: ' + decodedText;
+    resultEl.textContent = '✓ 스캔 완료: ' + finalText;
     resultEl.style.display = 'block';
 
     html5QrCode.stop().catch(function(){});
 
     // 원래 창(유통기한관리 페이지)으로 스캔 결과 전달
     if(window.opener){
-      window.opener.postMessage({ type: 'EXPIRY_BARCODE_SCANNED', barcode: decodedText }, '*');
+      window.opener.postMessage({ type: 'EXPIRY_BARCODE_SCANNED', barcode: finalText }, '*');
     }
     setTimeout(function(){ window.close(); }, 600);
   },
